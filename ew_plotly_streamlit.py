@@ -17,7 +17,7 @@ st.write("""
 ## [Energy_Use_Info](https://github.com/MichaelSalata/Energy_Use_Info)
 This project visualizes insights using my **weather & electricity** meter data.
 
-For how the data was **downloaded, cleaned & visualized**: visit my [Energy_Use_Info project page](https://github.com/MichaelSalata/Energy_Use_Info/blob/main/README.md) 
+Visit [Energy_Use_Info project page](https://github.com/MichaelSalata/Energy_Use_Info/blob/main/README.md) for how the data was **downloaded, cleaned & visualized**  
 """)
 
 
@@ -82,12 +82,12 @@ from plotly.subplots import make_subplots
 fig = make_subplots(specs=[[{"secondary_y": True}]])
 
 fig.add_trace(
-    go.Scatter(x=energy_weather_df['time'], y=rolling_avg_cost, name='$COST (7-Day Avg)', mode='lines', line=dict(color='green')),
+    go.Scatter(x=energy_weather_df['time'], y=rolling_avg_cost, name='$COST', mode='lines', line=dict(color='green')),
     secondary_y=False,
 )
 
 fig.add_trace(
-    go.Scatter(x=energy_weather_df['time'], y=rolling_avg_temp, name='Temp (7-Day Avg)', mode='lines', line=dict(color='royalblue')),
+    go.Scatter(x=energy_weather_df['time'], y=rolling_avg_temp, name='Cold Temps', mode='lines', line=dict(color='royalblue')),
     secondary_y=True,
 )
 
@@ -95,7 +95,7 @@ fig.add_trace(
 fig.add_vline(x=start_warm_date)
 fig.add_vline(x=end_warm_date)
 fig.add_trace(
-    go.Scatter(x=energy_weather_df['time'].loc[warm_day_mask], y=rolling_avg_temp.loc[warm_day_mask], name='Temp (7-Day Avg)', mode='lines', line=dict(color='orange')),
+    go.Scatter(x=energy_weather_df['time'].loc[warm_day_mask], y=rolling_avg_temp.loc[warm_day_mask], name='Warm Temps', mode='lines', line=dict(color='orange')),
     secondary_y=True,
 )
 
@@ -118,13 +118,11 @@ st.write(usage_corr[potential_corr_cols])
 
 st.write("""
 ## Lower Temperatures = Higher Energy Bill?
-Most temperatures between 65F & -10F and Energy Bill inversely correlates with Temperature, we can infer that the heating system is the biggest Energy drain.
- But what about the other half of the HVAC system? Cooling.
+The Bill inversely correlates with Temperature between 65F to -10F. We can infer that the heating system is the biggest Energy drain.
 """)
 
 st.write("""
 ## Warm Days Tell the Opposite Story
-Notice how
 """)
 
 
@@ -144,12 +142,12 @@ rolling_avg_temp_filtered = rolling_avg_temp.loc[warm_day_mask]
 fig_filtered = make_subplots(specs=[[{"secondary_y": True}]])
 
 fig_filtered.add_trace(
-    go.Scatter(x=filtered_df['time'], y=rolling_avg_cost_filtered, name='$COST (7-Day Avg)', mode='lines', line=dict(color='green')),
+    go.Scatter(x=filtered_df['time'], y=rolling_avg_cost_filtered, name='$COST', mode='lines', line=dict(color='green')),
     secondary_y=False,
 )
 
 fig_filtered.add_trace(
-    go.Scatter(x=filtered_df['time'], y=rolling_avg_temp_filtered, name='Temp (7-Day Avg)', mode='lines', line=dict(color='orange')),
+    go.Scatter(x=filtered_df['time'], y=rolling_avg_temp_filtered, name='Warm Temps', mode='lines', line=dict(color='orange')),
     secondary_y=True,
 )
 
