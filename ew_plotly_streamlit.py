@@ -22,6 +22,7 @@ Visit [Energy_Use_Info project page](https://github.com/MichaelSalata/Energy_Use
 
 
 
+
 import glob
 directory_path = "./data"
 file_pattern = "energy_weather_*.csv"
@@ -42,15 +43,18 @@ energy_weather_df['HOUR'] = pd.to_datetime(energy_weather_df['HOUR'], format='%Y
 # Create a column for the temperature in fahrenheit
 energy_weather_df['temp_fahrenheit'] = (energy_weather_df['temp'] * 9/5) + 32
 
-# Create temperature bins
-temp_bins = list(range(-10, 110, 10))
 
-# Categorize rows based on temperature bins
-energy_weather_df['temp_bins'] = pd.cut(energy_weather_df['temp_fahrenheit'], bins=temp_bins, right=False)
 
-# Group by temperature bins and calculate average 'USAGE' and count
-average_data = energy_weather_df.groupby('temp_bins').agg({'USAGE': ['mean', 'count']}).reset_index()
-average_data.columns = ['temp_bins', 'avg_USAGE', 'count']
+# Sidebar: Date Range Picker for Warm Days
+st.sidebar.header("Blue Date Range")
+cold_start_date = st.sidebar.date_input("Start Date", energy_weather_df['time'].min())
+cold_end_date = st.sidebar.date_input("End Date", energy_weather_df['time'].max())
+
+# Sidebar: Date Range Picker for Warm Days
+st.sidebar.header("Orange Date Range")
+warm_start_date = st.sidebar.date_input("Start Date", pd.to_datetime('2023-06-20'))
+warm_end_date = st.sidebar.date_input("End Date", pd.to_datetime('2023-09-19'))
+
 
 # Calculating the average energy usage for each temperature and plotting a line
 # Group by temperature and calculate mean USAGE
@@ -62,9 +66,16 @@ temp_usage_avg = temp_usage_avg.sort_values(by='temp_fahrenheit')
 
 
 # Filter the DataFrame for the warm days
-start_warm_date = '2023-06-20'
-end_warm_date = '2023-09-19'
-warm_day_mask = (energy_weather_df['time'] >= start_warm_date) & (energy_weather_df['time'] <= end_warm_date)
+# Convert start and end dates to datetime64[ns] type
+warm_start_date = pd.to_datetime(warm_start_date)
+warm_end_date = pd.to_datetime(warm_end_date)
+
+# Convert start and end dates to datetime64[ns] type
+warm_start_date = pd.to_datetime(warm_start_date)
+warm_end_date = pd.to_datetime(warm_end_date)
+
+# Filter the DataFrame for the warm days
+warm_day_mask = (energy_weather_df['time'] >= warm_start_date) & (energy_weather_df['time'] <= warm_end_date)
 filtered_df = energy_weather_df.loc[warm_day_mask]
 
 
@@ -87,13 +98,13 @@ fig.add_trace(
 )
 
 fig.add_trace(
-    go.Scatter(x=energy_weather_df['time'], y=rolling_avg_temp, name='Cold Temps', mode='lines', line=dict(color='royalblue')),
+    go.Scatter(x=energy_weather_df['time'], y=rolling_avg_temp, name='All Temps', mode='lines', line=dict(color='royalblue')),
     secondary_y=True,
 )
 
 
-fig.add_vline(x=start_warm_date)
-fig.add_vline(x=end_warm_date)
+fig.add_vline(x=warm_start_date)
+fig.add_vline(x=warm_end_date)
 fig.add_trace(
     go.Scatter(x=energy_weather_df['time'].loc[warm_day_mask], y=rolling_avg_temp.loc[warm_day_mask], name='Warm Temps', mode='lines', line=dict(color='orange')),
     secondary_y=True,
@@ -108,6 +119,8 @@ fig.update_layout(
 )
 
 st.plotly_chart(fig)
+
+
 
 
 st.write("""## $Bill Correlates with Temperature""")
@@ -169,6 +182,8 @@ Now that that we can see the trends for when we're using the Heating or Cooling,
 """)
 
 
+
+
 import matplotlib.pyplot as plt
 
 # Scatter plot of Temperature vs. Energy Usage
@@ -201,6 +216,19 @@ st.plotly_chart(fig)
 
 
 
+# Sidebar: Temperature Bins Adjustment
+st.sidebar.header("Temperature Bins")
+temp_bin_size = st.sidebar.number_input("Temp Bin Size", value=10, step=1)
+temp_bin_start = st.sidebar.number_input("Start Temperature", value=-10, step=temp_bin_size)
+temp_bin_end = st.sidebar.number_input("End Temperature", value=110, step=temp_bin_size)
+temp_bins = list(range(temp_bin_start, temp_bin_end, temp_bin_size))
+
+# Categorize rows based on temperature bins
+energy_weather_df['temp_bins'] = pd.cut(energy_weather_df['temp_fahrenheit'], bins=temp_bins, right=False)
+
+# Group by temperature bins and calculate average 'USAGE' and count
+average_data = energy_weather_df.groupby('temp_bins').agg({'USAGE': ['mean', 'count']}).reset_index()
+average_data.columns = ['temp_bins', 'avg_USAGE', 'count']
 
 # electricity USAGE per 10°F Range bar chart using Plotly
 fig = go.Figure(data=[
