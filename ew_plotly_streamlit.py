@@ -178,7 +178,7 @@ st.plotly_chart(fig_filtered)
 
 st.write("""
 ## Electricity NOT for Heating/Cooling
-Now that that we can see the trends for when we're using the Heating or Cooling, can we identify electricity usage for rest of the household?
+Using the trends we see for Heating or Cooling, we infer electricity usage for rest of the household from the minimum on the chart.
 """)
 
 
