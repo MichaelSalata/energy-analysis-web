@@ -59,6 +59,13 @@ temp_usage_avg = temp_usage_avg.sort_values(by='temp_fahrenheit')
 
 
 
+
+
+
+
+
+
+
 st.write(f""" **NOTE**: Data ranges from {cold_start_date} to {cold_end_date}""")
 
 
@@ -109,6 +116,17 @@ st.plotly_chart(fig)
 
 
 
+
+
+
+
+
+
+
+
+
+
+
 st.write("""
 ### Lower Temperatures = Higher Energy Bill?
 We see that the Energy Bill is significantly higher during the colder temperatures, which makes sense as the heating system is likely working harder to maintain a comfortable temperature. The graph shows a clear inverse relationship between temperature and energy bill, with lower temperatures leading to higher bills.
@@ -152,6 +170,13 @@ For the majority year the inverse relationship between temperature and energy bi
 
 
 
+
+
+
+
+
+
+
 st.write("""## $Bill Correlations""")
 # mapping for clearer column names
 column_descriptions = {
@@ -186,6 +211,13 @@ The correlation function confirms our observerations. The Air Temperature correl
 
 
 
+
+
+
+
+
+
+
 st.write("""## Electricity NOT for Heating/Cooling""")
 
 avg_usage_65_70 = energy_weather_df.loc[
@@ -216,10 +248,8 @@ The graph visualises this at a lateral line at: \n **{avg_usage_65_70:.2f} kWh**
 fig = px.scatter(energy_weather_df, x='temp_fahrenheit', y='USAGE', title='Temperature vs. Energy Usage (interactive)',
                  labels={'temp_fahrenheit': 'Temperature (°F)', 'USAGE': 'Energy Usage (kwh)'}, opacity=0.20)
 
-# fig.update_traces(marker=dict(symbol='x'))
 fig.update_traces(marker=dict(symbol='x'), name='Scatter Points')
 
-# add the average energy usage line on top
 fig.add_trace(go.Scatter(x=temp_usage_avg['temp_fahrenheit'], y=temp_usage_avg['USAGE'], mode='lines', name='Average Usage', line=dict(color='red')))
 
 
@@ -234,6 +264,12 @@ fig.add_shape(
 )
 
 st.plotly_chart(fig)
+
+
+
+
+
+
 
 
 
@@ -284,6 +320,11 @@ fig.update_yaxes(showgrid=True, gridwidth=1, gridcolor='LightPink')
 st.plotly_chart(fig)
 
 st.write("""The quantity of hours at the higher kWh usage clearly indicates that the Heating system is the biggest energy drain.""")
+
+
+
+
+
 
 
 st.write("""## Impact of Heating vs Cooling""")
