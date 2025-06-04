@@ -128,10 +128,10 @@ st.plotly_chart(fig)
 
 
 st.write("""
-### Lower Temperatures = Higher Energy Bill?
+### Lower Temperatures = Higher Energy Bill
 We see that the Energy Bill is significantly higher during the colder temperatures. Given how far the temperature is from a comfortable ~68degrees, it makes sense as the heating system is likely working very hard.""")
 
-st.write("""The also graph demonstrates a clear inverse relationship between temperature and energy bill, with lower temperatures.""")
+st.write("""The graph demonstrates a clear inverse relationship between temperature and energy bill, during lower temperatures.""")
 
 st.write("""
 ### Warm Days Tell the Opposite Story""")
@@ -164,9 +164,7 @@ fig_filtered.update_layout(
 # Display the filtered graph in Streamlit
 st.plotly_chart(fig_filtered)
 
-st.write("""
-During the warm months (June to September), the energy bill is higher when the temperature is higher, indicating that the cooling system is working harder to maintain a comfortable temperature.
-""")
+
 
 
 
@@ -371,11 +369,10 @@ st.write(f"""
     - Total Usage: {above_70_usage:.0f} kWh
     - Total Cost: ${above_70_cost:.2f}
 """)
-st.write("""
-The heating system is the clear point of potential improvement, as the data shows significantly higher energy usage and cost below 65°F. Optimizing or upgrading the heating system could lead to substantial cost savings.
-""")
 
-st.write("""## Project Use Cases""")
+
+
+st.write("""## Potential Use Cases""")
 st.write("""
 1. **HVAC System Optimization**: Use the data to identify the most energy-intensive temperature ranges and optimize heating/cooling systems accordingly.
 2. **Renewable Energy Integration**: Evaluate the feasibility of renewable energy sources (e.g., solar panels) to offset high energy usage during peak seasons.
