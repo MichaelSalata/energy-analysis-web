@@ -15,7 +15,7 @@ import streamlit as st
 
 st.write("""
 ## [Energy_Use_Info](https://github.com/MichaelSalata/Energy_Use_Info)
-This project visualizes insights from **weather data** from Meteostat & my ComEd **electricity meter data**. The data can then used to quantify the weather’s impact and prepare for an HVAC upgrade
+This project visualizes insights from **weather data** from Meteostat & my ComEd **electricity meter data**. This helps with to quantifing the weather’s impact and preparing for an HVAC upgrade
 """)
 
 
@@ -129,11 +129,12 @@ st.plotly_chart(fig)
 
 st.write("""
 ### Lower Temperatures = Higher Energy Bill?
-We see that the Energy Bill is significantly higher during the colder temperatures, which makes sense as the heating system is likely working harder to maintain a comfortable temperature. The graph shows a clear inverse relationship between temperature and energy bill, with lower temperatures leading to higher bills.
-""")
+We see that the Energy Bill is significantly higher during the colder temperatures. Given how far the temperature is from a comfortable ~68degrees, it makes sense as the heating system is likely working very hard.""")
+
+st.write("""The also graph demonstrates a clear inverse relationship between temperature and energy bill, with lower temperatures.""")
 
 st.write("""
-## Warm Days Tell the Opposite Story""")
+### Warm Days Tell the Opposite Story""")
 
 
 
@@ -164,7 +165,7 @@ fig_filtered.update_layout(
 st.plotly_chart(fig_filtered)
 
 st.write("""
-For the majority year the inverse relationship between temperature and energy bill holds true, but during the warm months (June to September), we see a different trend. The energy bill is higher when the temperature is higher, indicating that the cooling system is working harder to maintain a comfortable temperature.
+During the warm months (June to September), the energy bill is higher when the temperature is higher, indicating that the cooling system is working harder to maintain a comfortable temperature.
 """)
 
 
@@ -205,7 +206,7 @@ warm_correlation_display = warm_usage_corr[potential_corr_cols].rename(index=col
 warm_correlation_display.name = "$BILL Correlation (Jun-Sept)"
 st.write(warm_correlation_display)
 st.write("""
-The correlation function confirms our observerations. The Air Temperature correlates negatively with the $BILL most of the year but positively during the summer months. It's important to note the stronger negative correlation between points to the Heating System is the bigger energy drain and the choice for an HVAC upgrade.
+The correlation function confirms our observerations. The Air Temperature correlates negatively with the $BILL most of the year but positively during the summer months.
 """)
 
 
@@ -273,13 +274,19 @@ st.plotly_chart(fig)
 
 
 
-
 # Sidebar: Temperature Bins Adjustment
 st.sidebar.header("Temperature Bins")
 temp_bin_size = st.sidebar.number_input("Temp Bin Size", value=10, step=1)
 temp_bin_start = st.sidebar.number_input("Start Temperature", value=-10, step=temp_bin_size)
 temp_bin_end = st.sidebar.number_input("End Temperature", value=110, step=temp_bin_size)
 temp_bins = list(range(temp_bin_start, temp_bin_end, temp_bin_size))
+
+
+
+
+
+
+st.write("""## Quantified Impact of Weather on Energy Usage""")
 
 # Categorize rows based on temperature bins
 energy_weather_df['temp_bins'] = pd.cut(energy_weather_df['temp_fahrenheit'], bins=temp_bins, right=False)
@@ -314,12 +321,12 @@ fig.update_layout(
     legend=dict(x=0.1, y=1.1, orientation="h")
 )
 
-# Add gridlines
+
 fig.update_yaxes(showgrid=True, gridwidth=1, gridcolor='LightPink')
 
 st.plotly_chart(fig)
 
-st.write("""The quantity of hours at the higher kWh usage clearly indicates that the Heating system is the biggest energy drain.""")
+st.write("""The quantity of hours at the higher kWh usage helps indicate which system system is the biggest energy drain. In this case, it's the heating system.""")
 
 
 
@@ -327,7 +334,6 @@ st.write("""The quantity of hours at the higher kWh usage clearly indicates that
 
 
 
-st.write("""## Impact of Heating vs Cooling""")
 
 # electricity usage for different temperature ranges
 labels = ['Below 65°F', '65°F-70°F', 'Above 70°F']
@@ -340,19 +346,16 @@ below_65_cost = energy_weather_df.loc[energy_weather_df['temp_fahrenheit'] < 65,
 between_65_70_cost = energy_weather_df.loc[(energy_weather_df['temp_fahrenheit'] >= 65) & (energy_weather_df['temp_fahrenheit'] <= 70), 'COST'].sum()
 above_70_cost = energy_weather_df.loc[energy_weather_df['temp_fahrenheit'] > 70, 'COST'].sum()
 
-# pie chart values
-usage_values = [below_65_usage, between_65_70_usage, above_70_usage]
-cost_values = [below_65_cost, between_65_70_cost, above_70_cost]
+# pie chart setup
+piechart_colors = ['blue',      'white',                'orange']
+usage_values = [below_65_usage, between_65_70_usage,    above_70_usage]
+cost_values = [below_65_cost,   between_65_70_cost,     above_70_cost]
 
-# colors for the pie chart sections
-colors = ['light blue', 'white', 'orange']
-
-# subplots for side-by-side pie charts
 fig = make_subplots(rows=1, cols=2, specs=[[{"type": "domain"}, {"type": "domain"}]],
                     subplot_titles=["Electricity Usage Distribution", "Electricity Cost Distribution"])
 
-fig.add_trace(go.Pie(labels=labels, values=usage_values, hole=0.3, name="Usage", marker=dict(colors=colors)), row=1, col=1)
-fig.add_trace(go.Pie(labels=labels, values=cost_values, hole=0.3, name="Cost", marker=dict(colors=colors)), row=1, col=2)
+fig.add_trace(go.Pie(labels=labels, values=usage_values, hole=0.3, name="Usage", marker=dict(colors=piechart_colors)), row=1, col=1)
+fig.add_trace(go.Pie(labels=labels, values=cost_values, hole=0.3, name="Cost", marker=dict(colors=piechart_colors)), row=1, col=2)
 
 fig.update_layout(title_text='Electricity Usage and Cost Distribution by Temperature Range')
 st.plotly_chart(fig)
