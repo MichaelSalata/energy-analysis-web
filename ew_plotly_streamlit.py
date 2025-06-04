@@ -6,9 +6,11 @@ import numpy as np
 
 import plotly.express as px
 import plotly.graph_objs as go
-import matplotlib as plt
-import streamlit as st
 
+from plotly.subplots import make_subplots
+
+import matplotlib.pyplot as plt
+import streamlit as st
 
 
 st.write("""
@@ -60,24 +62,19 @@ temp_usage_avg = temp_usage_avg.sort_values(by='temp_fahrenheit')
 st.write(f""" **NOTE**: Data ranges from {cold_start_date} to {cold_end_date}""")
 
 
-# Filter the DataFrame for the warm days
-# Convert start and end dates to datetime64[ns] type
+# filter for the warm days
 warm_start_date = pd.to_datetime(warm_start_date)
 warm_end_date = pd.to_datetime(warm_end_date)
-
-# Filter the DataFrame for the warm days
 warm_day_mask = (energy_weather_df['time'] >= warm_start_date) & (energy_weather_df['time'] <= warm_end_date)
 filtered_df = energy_weather_df.loc[warm_day_mask]
 
 
-# Calculate 7-day rolling average for COST & Temp
+# 7-day rolling average for COST & Temp
 hours = 24
 days = 7
 window_size = hours * days
 rolling_avg_cost = energy_weather_df['COST'].rolling(window=window_size).mean()
 rolling_avg_temp = energy_weather_df['temp_fahrenheit'].rolling(window=window_size).mean()
-
-from plotly.subplots import make_subplots
 
 # Create subplots with secondary_y axis for the two y-axes
 fig = make_subplots(specs=[[{"secondary_y": True}]])
@@ -112,11 +109,6 @@ st.plotly_chart(fig)
 
 
 
-
-
-
-
-
 st.write("""
 ### Lower Temperatures = Higher Energy Bill?
 We see that the Energy Bill is significantly higher during the colder temperatures, which makes sense as the heating system is likely working harder to maintain a comfortable temperature. The graph shows a clear inverse relationship between temperature and energy bill, with lower temperatures leading to higher bills.
@@ -126,19 +118,10 @@ st.write("""
 ## Warm Days Tell the Opposite Story""")
 
 
-# filtered_df = energy_weather_df[(energy_weather_df['time'] >= start_date) & (energy_weather_df['time'] <= end_date)]
-
-# Calculate 7-day rolling averages for the filtered data
-# rolling_avg_cost_filtered = filtered_df['COST'].rolling(window=7*24, min_periods=1).mean()
-# rolling_avg_temp_filtered = filtered_df['temp'].rolling(window=7*24, min_periods=1).mean()
-
-# rolling_avg_cost_filtered = rolling_avg_cost[(rolling_avg_cost['time'] >= start_date) & (rolling_avg_cost['time'] <= end_date)]
-# rolling_avg_temp_filtered = rolling_avg_temp[(rolling_avg_temp['time'] >= start_date) & (rolling_avg_temp['time'] <= end_date)]
 
 rolling_avg_cost_filtered = rolling_avg_cost.loc[warm_day_mask]
 rolling_avg_temp_filtered = rolling_avg_temp.loc[warm_day_mask]
 
-# Create subplots with secondary_y axis for the two y-axes
 fig_filtered = make_subplots(specs=[[{"secondary_y": True}]])
 
 fig_filtered.add_trace(
@@ -170,9 +153,6 @@ For the majority year the inverse relationship between temperature and energy bi
 
 
 st.write("""## $Bill Correlations""")
-# correlate BILL with all days
-usage_corr = energy_weather_df.select_dtypes(include=[np.number]).corr()['COST'].sort_values(key=abs, ascending=False)
-
 # mapping for clearer column names
 column_descriptions = {
     "temp_fahrenheit": "Air Temperature (°F)",
@@ -183,6 +163,9 @@ column_descriptions = {
     "rhum": "Relative Humidity (%)",
     "prcp": "Precipitation (mm)"
 }
+
+# correlate BILL with all days
+usage_corr = energy_weather_df.select_dtypes(include=[np.number]).corr()['COST'].sort_values(key=abs, ascending=False)
 
 potential_corr_cols = ["temp_fahrenheit", "dwpt", "wspd", "wdir", "pres", "rhum", "prcp"]
 correlation_display = usage_corr[potential_corr_cols].rename(index=column_descriptions)
@@ -205,13 +188,10 @@ The correlation function confirms our observerations. The Air Temperature correl
 
 st.write("""## Electricity NOT for Heating/Cooling""")
 
-import matplotlib.pyplot as plt
-
 avg_usage_65_70 = energy_weather_df.loc[
     (energy_weather_df['temp_fahrenheit'] > 65) & (energy_weather_df['temp_fahrenheit'] < 70), 'USAGE'
 ].mean()
 
-# Scatter plot of Temperature vs. Energy Usage
 plt.figure(figsize=(10, 6))
 plt.scatter(energy_weather_df['temp_fahrenheit'], energy_weather_df['USAGE'], alpha=0.5)
 
@@ -219,11 +199,10 @@ plt.scatter(energy_weather_df['temp_fahrenheit'], energy_weather_df['USAGE'], al
 plt.plot(temp_usage_avg['temp_fahrenheit'], temp_usage_avg['USAGE'], color='red')
 plt.axhline(y=avg_usage_65_70, color='red', linestyle='--', label=f'Avg Usage (65°F-70°F): {avg_usage_65_70:.2f} kWh')
 
-# Adding titles and labels
 plt.title('Temperature vs. Energy Usage')
 plt.xlabel('Temperature (°F)')
 plt.ylabel('Energy Usage (kwh)')
-# plt.show()
+
 st.pyplot(plt)
 st.write(f"""
 To help quantify how much of an impact the HVAC system has, we can to identify a baseline household electricity usage by learning the electricity usage for temperatures 65°F to 70°F. This range is typically comfortable for most households and when the HVAC system won't be running.
