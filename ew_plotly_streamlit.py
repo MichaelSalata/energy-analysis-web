@@ -1,8 +1,6 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-
-
 import pandas as pd
 import numpy as np
 
@@ -15,12 +13,8 @@ import streamlit as st
 
 st.write("""
 ## [Energy_Use_Info](https://github.com/MichaelSalata/Energy_Use_Info)
-This project visualizes insights using my **weather & electricity** meter data.
-
-Visit [Energy_Use_Info project page](https://github.com/MichaelSalata/Energy_Use_Info/blob/main/README.md) for how the data was **downloaded, cleaned & visualized**  
+This project visualizes insights from **weather data** from Meteostat & my ComEd **electricity meter data**. The data can then used to quantify the weather’s impact and prepare for an HVAC upgrade
 """)
-
-
 
 
 import glob
@@ -31,9 +25,7 @@ file_path = glob.glob(f"{directory_path}/{file_pattern}")[0]
 energy_weather_df = pd.read_csv(filepath_or_buffer=file_path)
 
 
-
 # process data for visualization
-
 # convert the time cols into Datetime objs
 energy_weather_df['time'] = pd.to_datetime(energy_weather_df['time'], format='%Y-%m-%d %H:%M:%S')
 
@@ -44,7 +36,7 @@ energy_weather_df['HOUR'] = pd.to_datetime(energy_weather_df['HOUR'], format='%Y
 energy_weather_df['temp_fahrenheit'] = (energy_weather_df['temp'] * 9/5) + 32
 
 
-
+# Sidebar setup
 # Sidebar: Date Range Picker for Warm Days
 st.sidebar.header("Blue Date Range")
 cold_start_date = st.sidebar.date_input("Start Date", energy_weather_df['time'].min())
@@ -65,11 +57,10 @@ temp_usage_avg = temp_usage_avg.sort_values(by='temp_fahrenheit')
 
 
 
-# Filter the DataFrame for the warm days
-# Convert start and end dates to datetime64[ns] type
-warm_start_date = pd.to_datetime(warm_start_date)
-warm_end_date = pd.to_datetime(warm_end_date)
+st.write(f""" **NOTE**: Data ranges from {cold_start_date} to {cold_end_date}""")
 
+
+# Filter the DataFrame for the warm days
 # Convert start and end dates to datetime64[ns] type
 warm_start_date = pd.to_datetime(warm_start_date)
 warm_end_date = pd.to_datetime(warm_end_date)
@@ -86,14 +77,13 @@ window_size = hours * days
 rolling_avg_cost = energy_weather_df['COST'].rolling(window=window_size).mean()
 rolling_avg_temp = energy_weather_df['temp_fahrenheit'].rolling(window=window_size).mean()
 
-
 from plotly.subplots import make_subplots
 
 # Create subplots with secondary_y axis for the two y-axes
 fig = make_subplots(specs=[[{"secondary_y": True}]])
 
 fig.add_trace(
-    go.Scatter(x=energy_weather_df['time'], y=rolling_avg_cost, name='$COST', mode='lines', line=dict(color='green')),
+    go.Scatter(x=energy_weather_df['time'], y=rolling_avg_cost, name='$BILL', mode='lines', line=dict(color='green')),
     secondary_y=False,
 )
 
@@ -102,16 +92,15 @@ fig.add_trace(
     secondary_y=True,
 )
 
-
-fig.add_vline(x=warm_start_date)
-fig.add_vline(x=warm_end_date)
+fig.add_vline(x=warm_start_date, line=dict(color='red'))
+fig.add_vline(x=warm_end_date, line=dict(color='red'))
 fig.add_trace(
     go.Scatter(x=energy_weather_df['time'].loc[warm_day_mask], y=rolling_avg_temp.loc[warm_day_mask], name='Warm Temps', mode='lines', line=dict(color='orange')),
     secondary_y=True,
 )
 
 fig.update_xaxes(title_text='<b>Date</b>')
-fig.update_yaxes(title_text='<b>$COST: 7-day Rolling Avg</b>', secondary_y=False, tickprefix='$')
+fig.update_yaxes(title_text='<b>$BILL</b>', secondary_y=False, tickprefix='$')
 fig.update_yaxes(title_text='<b>Temperature (°F)</b>', secondary_y=True)
 
 fig.update_layout(
@@ -123,20 +112,18 @@ st.plotly_chart(fig)
 
 
 
-st.write("""## $Bill Correlates with Temperature""")
-usage_corr = energy_weather_df.select_dtypes(include=[np.number]).corr()['COST'].sort_values(key=abs, ascending=False)
-potential_corr_cols = ["temp_fahrenheit", "dwpt", "wspd", "wdir", "pres", "rhum", "prcp"]
-st.write(usage_corr[potential_corr_cols])
+
+
+
 
 
 st.write("""
-## Lower Temperatures = Higher Energy Bill?
-The Bill inversely correlates with Temperature between 65F to -10F. We can infer that the heating system is the biggest Energy drain.
+### Lower Temperatures = Higher Energy Bill?
+We see that the Energy Bill is significantly higher during the colder temperatures, which makes sense as the heating system is likely working harder to maintain a comfortable temperature. The graph shows a clear inverse relationship between temperature and energy bill, with lower temperatures leading to higher bills.
 """)
 
 st.write("""
-## Warm Days Tell the Opposite Story
-""")
+## Warm Days Tell the Opposite Story""")
 
 
 # filtered_df = energy_weather_df[(energy_weather_df['time'] >= start_date) & (energy_weather_df['time'] <= end_date)]
@@ -175,23 +162,62 @@ fig_filtered.update_layout(
 # Display the filtered graph in Streamlit
 st.plotly_chart(fig_filtered)
 
-
 st.write("""
-## Electricity NOT for Heating/Cooling
-Using the trends we see for Heating or Cooling, we infer electricity usage for rest of the household from the minimum on the chart.
+For the majority year the inverse relationship between temperature and energy bill holds true, but during the warm months (June to September), we see a different trend. The energy bill is higher when the temperature is higher, indicating that the cooling system is working harder to maintain a comfortable temperature.
 """)
 
 
 
 
+st.write("""## $Bill Correlations""")
+# correlate BILL with all days
+usage_corr = energy_weather_df.select_dtypes(include=[np.number]).corr()['COST'].sort_values(key=abs, ascending=False)
+
+# mapping for clearer column names
+column_descriptions = {
+    "temp_fahrenheit": "Air Temperature (°F)",
+    "dwpt": "Dew Point (°C)",
+    "wspd": "Wind Speed (km/h)",
+    "wdir": "Wind Direction (°)",
+    "pres": "Air Pressure (hPa)",
+    "rhum": "Relative Humidity (%)",
+    "prcp": "Precipitation (mm)"
+}
+
+potential_corr_cols = ["temp_fahrenheit", "dwpt", "wspd", "wdir", "pres", "rhum", "prcp"]
+correlation_display = usage_corr[potential_corr_cols].rename(index=column_descriptions)
+correlation_display.name = "$BILL Correlation All Year"
+st.write(correlation_display)
+
+
+# correlate BILL with warm days
+warm_day_data = energy_weather_df.loc[warm_day_mask]
+warm_usage_corr = warm_day_data.select_dtypes(include=[np.number]).corr()['COST'].sort_values(key=abs, ascending=False)
+warm_correlation_display = warm_usage_corr[potential_corr_cols].rename(index=column_descriptions)
+warm_correlation_display.name = "$BILL Correlation (Jun-Sept)"
+st.write(warm_correlation_display)
+st.write("""
+The correlation function confirms our observerations. The Air Temperature correlates negatively with the $BILL most of the year but positively during the summer months. It's important to note the stronger negative correlation between points to the Heating System is the bigger energy drain and the choice for an HVAC upgrade.
+""")
+
+
+
+
+st.write("""## Electricity NOT for Heating/Cooling""")
+
 import matplotlib.pyplot as plt
+
+avg_usage_65_70 = energy_weather_df.loc[
+    (energy_weather_df['temp_fahrenheit'] > 65) & (energy_weather_df['temp_fahrenheit'] < 70), 'USAGE'
+].mean()
 
 # Scatter plot of Temperature vs. Energy Usage
 plt.figure(figsize=(10, 6))
 plt.scatter(energy_weather_df['temp_fahrenheit'], energy_weather_df['USAGE'], alpha=0.5)
 
-# Plotting the line
+# plot the average among the points
 plt.plot(temp_usage_avg['temp_fahrenheit'], temp_usage_avg['USAGE'], color='red')
+plt.axhline(y=avg_usage_65_70, color='red', linestyle='--', label=f'Avg Usage (65°F-70°F): {avg_usage_65_70:.2f} kWh')
 
 # Adding titles and labels
 plt.title('Temperature vs. Energy Usage')
@@ -199,17 +225,34 @@ plt.xlabel('Temperature (°F)')
 plt.ylabel('Energy Usage (kwh)')
 # plt.show()
 st.pyplot(plt)
-
+st.write(f"""
+To help quantify how much of an impact the HVAC system has, we can to identify a baseline household electricity usage by learning the electricity usage for temperatures 65°F to 70°F. This range is typically comfortable for most households and when the HVAC system won't be running.
+""")
+st.write(f"""
+The graph visualises this at a lateral line at: \n **{avg_usage_65_70:.2f} kWh**.
+""")
 
 
 # First, create the scatter plot
 fig = px.scatter(energy_weather_df, x='temp_fahrenheit', y='USAGE', title='Temperature vs. Energy Usage (interactive)',
-                 labels={'temp_fahrenheit': 'Temperature (°F)', 'USAGE': 'Energy Usage (kwh)'}, opacity=0.5)
+                 labels={'temp_fahrenheit': 'Temperature (°F)', 'USAGE': 'Energy Usage (kwh)'}, opacity=0.20)
 
-fig.update_traces(marker=dict(symbol='x'))
+# fig.update_traces(marker=dict(symbol='x'))
+fig.update_traces(marker=dict(symbol='x'), name='Scatter Points')
 
 # add the average energy usage line on top
 fig.add_trace(go.Scatter(x=temp_usage_avg['temp_fahrenheit'], y=temp_usage_avg['USAGE'], mode='lines', name='Average Usage', line=dict(color='red')))
+
+
+fig.add_shape(
+    type="line",
+    x0=energy_weather_df['temp_fahrenheit'].min(),
+    x1=energy_weather_df['temp_fahrenheit'].max(),
+    y0=avg_usage_65_70,
+    y1=avg_usage_65_70,
+    line=dict(color="red", width=2, dash="dash"),
+    name=f"Avg Usage (65°F-70°F): {avg_usage_65_70:.2f} kWh"
+)
 
 st.plotly_chart(fig)
 
@@ -238,7 +281,7 @@ fig = go.Figure(data=[
         text=average_data['count'].apply(lambda x: f'{x}<br>hrs'),
         textposition='auto',
         marker_color='royalblue',
-        name='Average USAGE'
+        name='Baseline USAGE'
     )
 ])
 
@@ -260,4 +303,60 @@ fig.update_layout(
 fig.update_yaxes(showgrid=True, gridwidth=1, gridcolor='LightPink')
 
 st.plotly_chart(fig)
+
+st.write("""The quantity of hours at the higher kWh usage clearly indicates that the Heating system is the biggest energy drain.""")
+
+
+st.write("""## Impact of Heating vs Cooling""")
+
+# electricity usage for different temperature ranges
+labels = ['Below 65°F', '65°F-70°F', 'Above 70°F']
+below_65_usage = energy_weather_df.loc[energy_weather_df['temp_fahrenheit'] < 65, 'USAGE'].sum()
+between_65_70_usage = energy_weather_df.loc[(energy_weather_df['temp_fahrenheit'] >= 65) & (energy_weather_df['temp_fahrenheit'] <= 70), 'USAGE'].sum()
+above_70_usage = energy_weather_df.loc[energy_weather_df['temp_fahrenheit'] > 70, 'USAGE'].sum()
+
+# electricity cost for different temperature ranges
+below_65_cost = energy_weather_df.loc[energy_weather_df['temp_fahrenheit'] < 65, 'COST'].sum()
+between_65_70_cost = energy_weather_df.loc[(energy_weather_df['temp_fahrenheit'] >= 65) & (energy_weather_df['temp_fahrenheit'] <= 70), 'COST'].sum()
+above_70_cost = energy_weather_df.loc[energy_weather_df['temp_fahrenheit'] > 70, 'COST'].sum()
+
+# pie chart values
+usage_values = [below_65_usage, between_65_70_usage, above_70_usage]
+cost_values = [below_65_cost, between_65_70_cost, above_70_cost]
+
+# colors for the pie chart sections
+colors = ['light blue', 'white', 'orange']
+
+# subplots for side-by-side pie charts
+fig = make_subplots(rows=1, cols=2, specs=[[{"type": "domain"}, {"type": "domain"}]],
+                    subplot_titles=["Electricity Usage Distribution", "Electricity Cost Distribution"])
+
+fig.add_trace(go.Pie(labels=labels, values=usage_values, hole=0.3, name="Usage", marker=dict(colors=colors)), row=1, col=1)
+fig.add_trace(go.Pie(labels=labels, values=cost_values, hole=0.3, name="Cost", marker=dict(colors=colors)), row=1, col=2)
+
+fig.update_layout(title_text='Electricity Usage and Cost Distribution by Temperature Range')
+st.plotly_chart(fig)
+
+st.write(f"""
+- **Below 65°F**: 
+    - Total Usage: {below_65_usage:.0f} kWh
+    - Total Cost: ${below_65_cost:.2f}
+- **65°F-70°F**: 
+    - Total Usage: {between_65_70_usage:.0f} kWh
+    - Total Cost: ${between_65_70_cost:.2f}
+- **Above 70°F**: 
+    - Total Usage: {above_70_usage:.0f} kWh
+    - Total Cost: ${above_70_cost:.2f}
+""")
+st.write("""
+The heating system is the clear point of potential improvement, as the data shows significantly higher energy usage and cost below 65°F. Optimizing or upgrading the heating system could lead to substantial cost savings.
+""")
+
+st.write("""## Project Use Cases""")
+st.write("""
+1. **HVAC System Optimization**: Use the data to identify the most energy-intensive temperature ranges and optimize heating/cooling systems accordingly.
+2. **Renewable Energy Integration**: Evaluate the feasibility of renewable energy sources (e.g., solar panels) to offset high energy usage during peak seasons.
+3. **Cost Savings Calculation**: Analyze the potential cost savings of upgrading the heating system by comparing current energy usage and costs with projected values for more efficient systems.
+""")
+
 
