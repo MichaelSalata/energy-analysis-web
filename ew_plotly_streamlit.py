@@ -379,6 +379,9 @@ st.write(f"""
 
 
 
+st.write("""When taking into account the baseline household energy usage, we see that the cold weather is responsible for ~95% of the HVAC usage and costs. """)
+st.write("""When upgrading to a more efficient system, we can use the accurate BILL and USAGE values to calculate the potential savings.""")
+
 
 st.write("""## Potential Use Cases""")
 st.write("""
