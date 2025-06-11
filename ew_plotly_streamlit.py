@@ -13,10 +13,16 @@ import matplotlib.pyplot as plt
 import streamlit as st
 
 
+st.write("""## Energy_Use_Info""")
 st.write("""
-## [Energy_Use_Info](https://github.com/MichaelSalata/Energy_Use_Info)
-This project visualizes insights from **weather data** from Meteostat & my ComEd **electricity meter data**. This helps with to quantifing the weather’s impact and preparing for an HVAC upgrade
+To aid in preparing for an HVAC upgrade, this project gathers and cleans **Meteostat weather data** & **ComEd energy meter data**. It then quantifies the impact the weather has on our HVAC system.
 """)
+
+st.write("""- The original Jupyter Notebooks that did the cleaning and analysis and can be found in the [Energy_Use_Info](https://github.com/MichaelSalata/Energy_Use_Info) repository.""")
+
+st.write("""- This streamlit project reanalyzes and visualizes and the cleaned data from the Jupyter notebooks. The streamlit GIT repo is [here](https://github.com/MichaelSalata/energy-analysis-web)""")
+
+
 
 
 import glob
@@ -27,14 +33,11 @@ file_path = glob.glob(f"{directory_path}/{file_pattern}")[0]
 energy_weather_df = pd.read_csv(filepath_or_buffer=file_path)
 
 
-# process data for visualization
-# convert the time cols into Datetime objs
+# convert the time, START_TIME cols into Datetime objs
 energy_weather_df['time'] = pd.to_datetime(energy_weather_df['time'], format='%Y-%m-%d %H:%M:%S')
-
-# convert the START_TIME col into Datetime objs
 energy_weather_df['HOUR'] = pd.to_datetime(energy_weather_df['HOUR'], format='%Y-%m-%d %H:%M:%S')
 
-# Create a column for the temperature in fahrenheit
+# create column for temperature in fahrenheit
 energy_weather_df['temp_fahrenheit'] = (energy_weather_df['temp'] * 9/5) + 32
 
 
@@ -68,6 +71,7 @@ temp_usage_avg = temp_usage_avg.sort_values(by='temp_fahrenheit')
 
 st.write(f""" **NOTE**: Data ranges from {cold_start_date} to {cold_end_date}""")
 
+st.write("""### Lower Temperatures = Higher Energy Bill?""")
 
 # filter for the warm days
 warm_start_date = pd.to_datetime(warm_start_date)
@@ -83,7 +87,7 @@ window_size = hours * days
 rolling_avg_cost = energy_weather_df['COST'].rolling(window=window_size).mean()
 rolling_avg_temp = energy_weather_df['temp_fahrenheit'].rolling(window=window_size).mean()
 
-# Create subplots with secondary_y axis for the two y-axes
+# subplots with secondary_y axis for the two y-axes
 fig = make_subplots(specs=[[{"secondary_y": True}]])
 
 fig.add_trace(
@@ -127,9 +131,7 @@ st.plotly_chart(fig)
 
 
 
-st.write("""
-### Lower Temperatures = Higher Energy Bill
-We see that the Energy Bill is significantly higher during the colder temperatures. Given how far the temperature is from a comfortable ~68degrees, it makes sense as the heating system is likely working very hard.""")
+st.write("""We see that the Energy Bill is higher during the colder temperatures. Given how far the temperature is from a comfortable ~68degrees, it makes sense as the heating system is working very hard to make the home comfortable.""")
 
 st.write("""The graph demonstrates a clear inverse relationship between temperature and energy bill, during lower temperatures.""")
 
@@ -161,7 +163,6 @@ fig_filtered.update_layout(
     title_text='Temperature & Energy Bill (Jun-Sept)'
 )
 
-# Display the filtered graph in Streamlit
 st.plotly_chart(fig_filtered)
 
 
@@ -236,7 +237,7 @@ plt.ylabel('Energy Usage (kwh)')
 
 st.pyplot(plt)
 st.write(f"""
-To help quantify how much of an impact the HVAC system has, we can to identify a baseline household electricity usage by learning the electricity usage for temperatures 65°F to 70°F. This range is typically comfortable for most households and when the HVAC system won't be running.
+To help quantify how much of an impact the HVAC system has, we can to identify a baseline household electricity usage by average the electricity usage for temperatures 65°F to 70°F. This range is typically comfortable for most households and when the HVAC system won't be running.
 """)
 st.write(f"""
 The graph visualises this at a lateral line at: \n **{avg_usage_65_70:.2f} kWh**.
@@ -282,9 +283,6 @@ temp_bins = list(range(temp_bin_start, temp_bin_end, temp_bin_size))
 
 
 
-
-
-st.write("""## Quantified Impact of Weather on Energy Usage""")
 
 # Categorize rows based on temperature bins
 energy_weather_df['temp_bins'] = pd.cut(energy_weather_df['temp_fahrenheit'], bins=temp_bins, right=False)
@@ -333,42 +331,52 @@ st.write("""The quantity of hours at the higher kWh usage helps indicate which s
 
 
 
+
+
+
+st.write("""## Quantified Impact of Weather on HVAC System""")
+
+# avg_usage_65_70
+avg_BILL_65_70 = energy_weather_df.loc[
+    (energy_weather_df['temp_fahrenheit'] > 65) & (energy_weather_df['temp_fahrenheit'] < 70), 'COST'
+].mean()
+
+energy_weather_df['adj_USAGE'] = energy_weather_df['USAGE'] - avg_usage_65_70
+energy_weather_df['adj_COST'] = energy_weather_df['COST'] - avg_BILL_65_70
+
+
 # electricity usage for different temperature ranges
 labels = ['Below 65°F', '65°F-70°F', 'Above 70°F']
-below_65_usage = energy_weather_df.loc[energy_weather_df['temp_fahrenheit'] < 65, 'USAGE'].sum()
-between_65_70_usage = energy_weather_df.loc[(energy_weather_df['temp_fahrenheit'] >= 65) & (energy_weather_df['temp_fahrenheit'] <= 70), 'USAGE'].sum()
-above_70_usage = energy_weather_df.loc[energy_weather_df['temp_fahrenheit'] > 70, 'USAGE'].sum()
+below_65_usage = energy_weather_df.loc[energy_weather_df['temp_fahrenheit'] < 65, 'adj_USAGE'].sum()
+above_70_usage = energy_weather_df.loc[energy_weather_df['temp_fahrenheit'] > 70, 'adj_USAGE'].sum()
 
 # electricity cost for different temperature ranges
-below_65_cost = energy_weather_df.loc[energy_weather_df['temp_fahrenheit'] < 65, 'COST'].sum()
-between_65_70_cost = energy_weather_df.loc[(energy_weather_df['temp_fahrenheit'] >= 65) & (energy_weather_df['temp_fahrenheit'] <= 70), 'COST'].sum()
-above_70_cost = energy_weather_df.loc[energy_weather_df['temp_fahrenheit'] > 70, 'COST'].sum()
+below_65_cost = energy_weather_df.loc[energy_weather_df['temp_fahrenheit'] < 65, 'adj_COST'].sum()
+above_70_cost = energy_weather_df.loc[energy_weather_df['temp_fahrenheit'] > 70, 'adj_COST'].sum()
 
 # pie chart setup
-piechart_colors = ['blue',      'white',                'orange']
-usage_values = [below_65_usage, between_65_70_usage,    above_70_usage]
-cost_values = [below_65_cost,   between_65_70_cost,     above_70_cost]
+piechart_colors = ['blue',      'orange']
+usage_values = [below_65_usage, above_70_usage]
+cost_values = [below_65_cost,   above_70_cost]
 
 fig = make_subplots(rows=1, cols=2, specs=[[{"type": "domain"}, {"type": "domain"}]],
-                    subplot_titles=["Electricity Usage Distribution", "Electricity Cost Distribution"])
+                    subplot_titles=["Energy Usage Distribution", "Energy Cost Distribution"])
 
 fig.add_trace(go.Pie(labels=labels, values=usage_values, hole=0.3, name="Usage", marker=dict(colors=piechart_colors)), row=1, col=1)
 fig.add_trace(go.Pie(labels=labels, values=cost_values, hole=0.3, name="Cost", marker=dict(colors=piechart_colors)), row=1, col=2)
 
-fig.update_layout(title_text='Electricity Usage and Cost Distribution by Temperature Range')
+fig.update_layout(title_text='BASELINE ADJUSTED Energy and Cost Distribution by Temperature')
 st.plotly_chart(fig)
 
 st.write(f"""
 - **Below 65°F**: 
     - Total Usage: {below_65_usage:.0f} kWh
     - Total Cost: ${below_65_cost:.2f}
-- **65°F-70°F**: 
-    - Total Usage: {between_65_70_usage:.0f} kWh
-    - Total Cost: ${between_65_70_cost:.2f}
 - **Above 70°F**: 
     - Total Usage: {above_70_usage:.0f} kWh
     - Total Cost: ${above_70_cost:.2f}
 """)
+
 
 
 
