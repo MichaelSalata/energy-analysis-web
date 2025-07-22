@@ -8,6 +8,7 @@ To aid in preparing for an HVAC upgrade, the [Energy-Use Info](https://github.co
 This project then further analyzes the data and visualizes the insights in a webdashboard.
 
 ![bill_vs_weather](https://github.com/MichaelSalata/energy-analysis-web/blob/main/imgs/bill_vs_weather.png)
+
 Sample Image from the [Webhosted Analysis](https://energy-analysis-web.streamlit.app/)
 
 How to Launch it Yourself
