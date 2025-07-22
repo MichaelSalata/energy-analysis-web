@@ -1,11 +1,31 @@
 
 ## [Fully Interactable Webhosted Analysis](https://energy-analysis-web.streamlit.app/)
-**NOTE**: It may take a minute to load
+**NOTE**: Web Hosting may take a minute to load
 
 Energy Use Info
 -----------------------
-To aid in preparing for an HVAC upgrade, this project gathers and cleans **Meteostat weather data** & **ComEd energy meter data**. It then quantifies the impact the weather has on our HVAC system.
+To aid in preparing for an HVAC upgrade, the [Energy-Use Info](https://github.com/MichaelSalata/Energy_Use_Info) project gathers and cleans **Meteostat weather data** & **ComEd energy meter data**.
+This project then further analyzes the data and visualizes the insights in a webdashboard.
 
-- The original Jupyter Notebooks that did the cleaning and analysis and can be found in the [Energy_Use_Info](https://github.com/MichaelSalata/Energy_Use_Info) repository.
+Sample Image
+![bill_vs_weather](https://github.com/MichaelSalata/energy-analysis-web/blob/main/imgs/bill_vs_weather.png)
 
-- This streamlit project reanalyzes and visualizes and the cleaned data from the Jupyter notebooks.
+How to Launch it Yourself
+-----------------------
+1. download the project
+```bash
+git clone https://github.com/MichaelSalata/energy-analysis-web.git
+```
+2. Create a Virtual Environment in the project
+```bash
+cd energy-analysis-web/
+python3 -m venv venv
+```
+3. Install the requirements
+```bash
+pip install -r requirements.txt
+```
+4. Run streamlit
+```bash
+streamlit run ew_plotly_streamlit.py
+```
