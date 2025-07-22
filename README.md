@@ -7,8 +7,8 @@ Energy Use Info
 To aid in preparing for an HVAC upgrade, the [Energy-Use Info](https://github.com/MichaelSalata/Energy_Use_Info) project gathers and cleans **Meteostat weather data** & **ComEd energy meter data**.
 This project then further analyzes the data and visualizes the insights in a webdashboard.
 
-Sample Image
 ![bill_vs_weather](https://github.com/MichaelSalata/energy-analysis-web/blob/main/imgs/bill_vs_weather.png)
+Sample Image from the [Webhosted Analysis](https://energy-analysis-web.streamlit.app/)
 
 How to Launch it Yourself
 -----------------------
